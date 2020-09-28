@@ -6,7 +6,9 @@ project(OpenDIS)
 
 # create list of DIS6 source files
 file(GLOB DIS6_SOURCES
+  "src/dis6/*.h"
   "src/dis6/*.cpp"
+  "src/utils/*.h"
   "src/utils/*.cpp"
 )
 # Define ExampleSender Executable
@@ -15,11 +17,14 @@ add_library(OpenDIS6 SHARED ${DIS6_SOURCES})
 target_include_directories(OpenDIS6 PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src> $<INSTALL_INTERFACE:> )
 # Add compile definition EXPORT_LIBRARY for DIS6 msLibMacro.h
 target_compile_definitions(OpenDIS6 PRIVATE EXPORT_LIBRARY)
+target_compile_definitions(OpenDIS6 PRIVATE DIS_VERSION=6)
 
 # create list of DIS7 source files
 file(GLOB DIS7_SOURCES
+  "src/dis7/*.h"
   "src/dis7/*.cpp"
-  "src/utils/DataStream.cpp"
+  "src/utils/*.h"
+  "src/utils/*.cpp"
 )
 # Define ExampleSender Executable
 add_library(OpenDIS7 SHARED ${DIS7_SOURCES})
@@ -27,6 +32,7 @@ add_library(OpenDIS7 SHARED ${DIS7_SOURCES})
 target_include_directories(OpenDIS7 PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src> $<INSTALL_INTERFACE:> )
 # Add compile definition EXPORT_LIBRARY for DIS7 msLibMacro.h
 target_compile_definitions(OpenDIS7 PRIVATE EXPORT_LIBRARY)
+target_compile_definitions(OpenDIS7 PRIVATE DIS_VERSION=7)
 
 
 ## Example Programs
@@ -59,6 +65,7 @@ target_link_libraries(ExampleSender PRIVATE OpenDIS6)
 target_link_libraries(ExampleSender PRIVATE ${SDL_LIBS})
 # add src to ExampleSender include directories
 target_include_directories(ExampleSender PRIVATE src)
+target_compile_definitions(ExampleSender PRIVATE DIS_VERSION=6)
 
 # create list of ExampleReceiver source files
 file(GLOB EX_RECEIVER_SOURCES
@@ -76,6 +83,7 @@ target_link_libraries(ExampleReceiver PRIVATE OpenDIS6)
 target_link_libraries(ExampleReceiver PRIVATE ${SDL_LIBS})
 # add src to ExampleSender include directories
 target_include_directories(ExampleReceiver PRIVATE src)
+target_compile_definitions(ExampleReceiver PRIVATE DIS_VERSION=6)
 
 # Configuring SDL2
 #--------------------------------------------------------------------------------------

@@ -1,11 +1,17 @@
 #include <utils/IncomingMessage.h>
 #include <utils/IPacketProcessor.h>
-#include <dis6/Pdu.h>
 #include <utils/DataStream.h>
 #include <utils/PDUBank.h>
-#include <iostream>
 
-#include <dis6/EntityStatePdu.h>
+#if DIS_VERSION == 6
+    #include <dis6/Pdu.h>
+    #include <dis6/EntityStatePdu.h>
+#elif DIS_VERSION == 7
+    #include <dis7/Pdu.h>
+    #include <dis7/EntityStatePdu.h>
+#else
+    #error "Unsupported DIS version"
+#endif
 
 #include <iostream>
 
@@ -33,7 +39,7 @@ void IncomingMessage::Process(const char* buf, unsigned int size, Endian e)
    DataStream ds( buf , size , e );
 
    while( ds.GetReadPos() < ds.size() )
-   {  
+   {
       unsigned char pdu_type = ds[PDU_TYPE_POSITION];
       SwitchOnType( static_cast<DIS::PDUType>(pdu_type), ds );
    }
@@ -74,7 +80,7 @@ void IncomingMessage::SwitchOnType(DIS::PDUType pdu_type, DataStream& ds)
    else
    {
       ds.clear();
-   }   
+   }
 }
 
 
@@ -90,7 +96,7 @@ bool IncomingMessage::AddProcessor(unsigned char id, IPacketProcessor* pp)
        return true;
    }
 
-   return false;    
+   return false;
 }
 
 ///\todo add proper support for erasing from a multimap.
@@ -122,7 +128,7 @@ bool IncomingMessage::AddPduBank(unsigned char id, IPduBank* pduBank)
        return true;
    }
 
-   return false;    
+   return false;
 }
 
 ///\todo add proper support for erasing from a multimap.
@@ -164,7 +170,7 @@ const IncomingMessage::PduBankContainer& IncomingMessage::GetPduBanks() const
 
 
 bool IncomingMessage::FindProccessorContainer(unsigned char id, const IPacketProcessor* pp, PacketProcessorContainer::iterator &containerIter)
-{  
+{
    PacketProcessIteratorPair iterPair = _processors.equal_range(id);
 
    // Check to make sure that the processor we're trying to add is not already there
@@ -186,7 +192,7 @@ bool IncomingMessage::FindProccessorContainer(unsigned char id, const IPacketPro
 
 
 bool IncomingMessage::FindPduBankContainer(unsigned char pdu_type, const IPduBank* pduBank, PduBankContainer::iterator &containerIter)
-{  
+{
    PduBankIteratorPair iterPair = _pduBanks.equal_range(pdu_type);
 
    // Check to make sure that the PDU bank we're trying to add is not already there

@@ -16,9 +16,17 @@
 #include <string>                 // for typedef, member
 #include <vector>                 // for typedef, member
 #include <utils/Endian.h>           // for enum
-#include <dis6/msLibMacro.h>       // for library symbols
 #include <cstdlib>                // for size_t and NULL definition
 #include <cstring>                // for memcpy
+
+#if DIS_VERSION == 6
+    #include <dis6/msLibMacro.h>       // for library symbols
+#elif DIS_VERSION == 7
+    #include <dis7/msLibMacro.h>       // for library symbols
+#else
+    #error "Unsupported DIS version"
+#endif
+
 
 namespace DIS
 {
@@ -147,7 +155,7 @@ namespace DIS
 }
 
 #if _MSC_VER
-#pragma warning( pop ) 
+#pragma warning( pop )
 #endif
 
 #endif  // _dcl_dis_data_stream_h_

@@ -5,7 +5,14 @@
 #define _dcl_dis_packet_factory_h_
 
 #include <map>                      // for member
-#include <dis6/msLibMacro.h>         // for library symbols
+#if DIS_VERSION == 6
+    #include <dis6/msLibMacro.h>       // for library symbols
+#elif DIS_VERSION == 7
+    #include <dis7/msLibMacro.h>       // for library symbols
+#else
+    #error "Unsupported DIS version"
+#endif
+
 
 namespace DIS
 {
