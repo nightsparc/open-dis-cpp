@@ -1,38 +1,49 @@
 cmake_minimum_required(VERSION 3.2)
 project(OpenDIS)
 
+## Set DIS protocol version
+set(DIS_PROTOCOL_VERSION "BOTH" CACHE STRING "Select the DIS library version to build.")
+set_property(CACHE DIS_PROTOCOL_VERSION PROPERTY STRINGS "6" "7" "BOTH")
+
+set(DIS_LIBRARY_TYPE "SHARED" CACHE STRING "Select wether to build a shared or static library.")
+set_property(CACHE DIS_LIBRARY_TYPE PROPERTY STRINGS "SHARED" "STATIC")
+
+option(BUILD_EXAMPLES "Build the examples (OpenDIS6 only)" ON)
 ## Libraries
 
+if(DIS_PROTOCOL_VERSION STREQUAL "6" OR DIS_PROTOCOL_VERSION STREQUAL "BOTH")
+    # create list of DIS6 source files
+    file(GLOB DIS6_SOURCES
+      "src/dis6/*.h"
+      "src/dis6/*.cpp"
+      "src/utils/*.h"
+      "src/utils/*.cpp"
+    )
+    # Define ExampleSender Executable
+    add_library(OpenDIS6 ${DIS_LIBRARY_TYPE} ${DIS6_SOURCES})
+    # Add src/ to the include directories to OpenDIS6
+    target_include_directories(OpenDIS6 PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src> $<INSTALL_INTERFACE:> )
+    # Add compile definition EXPORT_LIBRARY for DIS6 msLibMacro.h
+    target_compile_definitions(OpenDIS6 PRIVATE EXPORT_LIBRARY)
+    target_compile_definitions(OpenDIS6 PRIVATE DIS_VERSION=6)
+endif()
 
-# create list of DIS6 source files
-file(GLOB DIS6_SOURCES
-  "src/dis6/*.h"
-  "src/dis6/*.cpp"
-  "src/utils/*.h"
-  "src/utils/*.cpp"
-)
-# Define ExampleSender Executable
-add_library(OpenDIS6 SHARED ${DIS6_SOURCES})
-# Add src/ to the include directories to OpenDIS6
-target_include_directories(OpenDIS6 PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src> $<INSTALL_INTERFACE:> )
-# Add compile definition EXPORT_LIBRARY for DIS6 msLibMacro.h
-target_compile_definitions(OpenDIS6 PRIVATE EXPORT_LIBRARY)
-target_compile_definitions(OpenDIS6 PRIVATE DIS_VERSION=6)
-
-# create list of DIS7 source files
-file(GLOB DIS7_SOURCES
-  "src/dis7/*.h"
-  "src/dis7/*.cpp"
-  "src/utils/*.h"
-  "src/utils/*.cpp"
-)
-# Define ExampleSender Executable
-add_library(OpenDIS7 SHARED ${DIS7_SOURCES})
-# Add src/ to the include directories to OpenDIS6
-target_include_directories(OpenDIS7 PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src> $<INSTALL_INTERFACE:> )
-# Add compile definition EXPORT_LIBRARY for DIS7 msLibMacro.h
-target_compile_definitions(OpenDIS7 PRIVATE EXPORT_LIBRARY)
-target_compile_definitions(OpenDIS7 PRIVATE DIS_VERSION=7)
+if(DIS_PROTOCOL_VERSION STREQUAL "7" OR DIS_PROTOCOL_VERSION STREQUAL "BOTH")
+    # create list of DIS7 source files
+    file(GLOB DIS7_SOURCES
+      "src/dis7/*.h"
+      "src/dis7/*.cpp"
+      "src/utils/*.h"
+      "src/utils/*.cpp"
+    )
+    # Define ExampleSender Executable
+    add_library(OpenDIS7 ${DIS_LIBRARY_TYPE} ${DIS7_SOURCES})
+    # Add src/ to the include directories to OpenDIS6
+    target_include_directories(OpenDIS7 PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src> $<INSTALL_INTERFACE:> )
+    # Add compile definition EXPORT_LIBRARY for DIS7 msLibMacro.h
+    target_compile_definitions(OpenDIS7 PRIVATE EXPORT_LIBRARY)
+    target_compile_definitions(OpenDIS7 PRIVATE DIS_VERSION=7)
+endif()
 
 
 ## Example Programs
@@ -40,17 +51,9 @@ include_directories(.)
 
 # if Windows add M_PI definition
 # - issues occurred during testing in Visual Studio
-if (WIN32)
+if(WIN32)
   add_definitions(/DM_PI=3.14159265358979323846)
 endif (WIN32)
-
-# create list of ExampleSender source files
-file(GLOB EX_SENDER_SOURCES
-  "examples/main.cpp"
-  "examples/Connection.cpp"
-  "examples/Utils.cpp"
-  "examples/Timer.cpp"
-)
 
 if(WIN32)
        set(SDL_LIBS SDL2main SDL2 SDL2_net)
@@ -58,32 +61,42 @@ else(WIN32)
        set(SDL_LIBS SDL2 SDL2_net)
 endif(WIN32)
 
-# Define ExampleSender Executable
-add_executable(ExampleSender ${EX_SENDER_SOURCES})
-# Link OpenDIS into ExampleSender
-target_link_libraries(ExampleSender PRIVATE OpenDIS6)
-target_link_libraries(ExampleSender PRIVATE ${SDL_LIBS})
-# add src to ExampleSender include directories
-target_include_directories(ExampleSender PRIVATE src)
-target_compile_definitions(ExampleSender PRIVATE DIS_VERSION=6)
+if(BUILD_EXAMPLES AND DIS_PROTOCOL_VERSION STREQUAL "6" OR DIS_PROTOCOL_VERSION STREQUAL "BOTH")
+    # create list of ExampleSender source files
+    file(GLOB EX_SENDER_SOURCES
+      "examples/main.cpp"
+      "examples/Connection.cpp"
+      "examples/Utils.cpp"
+      "examples/Timer.cpp"
+    )
 
-# create list of ExampleReceiver source files
-file(GLOB EX_RECEIVER_SOURCES
-  "examples/main_receive.cpp"
-  "examples/Connection.cpp"
-  "examples/Utils.cpp"
-  "examples/Timer.cpp"
-  "examples/EntityStatePduProcessor.cpp"
-)
+    # Define ExampleSender Executable
+    add_executable(ExampleSender ${EX_SENDER_SOURCES})
+    # Link OpenDIS into ExampleSender
+    target_link_libraries(ExampleSender PRIVATE OpenDIS6)
+    target_link_libraries(ExampleSender PRIVATE ${SDL_LIBS})
+    # add src to ExampleSender include directories
+    target_include_directories(ExampleSender PRIVATE src)
+    target_compile_definitions(ExampleSender PRIVATE DIS_VERSION=6)
 
-# Define ExampleReceiver Executable
-add_executable(ExampleReceiver ${EX_RECEIVER_SOURCES})
-# Link OpenDIS into ExampleReceiver
-target_link_libraries(ExampleReceiver PRIVATE OpenDIS6)
-target_link_libraries(ExampleReceiver PRIVATE ${SDL_LIBS})
-# add src to ExampleSender include directories
-target_include_directories(ExampleReceiver PRIVATE src)
-target_compile_definitions(ExampleReceiver PRIVATE DIS_VERSION=6)
+    # create list of ExampleReceiver source files
+    file(GLOB EX_RECEIVER_SOURCES
+      "examples/main_receive.cpp"
+      "examples/Connection.cpp"
+      "examples/Utils.cpp"
+      "examples/Timer.cpp"
+      "examples/EntityStatePduProcessor.cpp"
+    )
+
+    # Define ExampleReceiver Executable
+    add_executable(ExampleReceiver ${EX_RECEIVER_SOURCES})
+    # Link OpenDIS into ExampleReceiver
+    target_link_libraries(ExampleReceiver PRIVATE OpenDIS6)
+    target_link_libraries(ExampleReceiver PRIVATE ${SDL_LIBS})
+    # add src to ExampleSender include directories
+    target_include_directories(ExampleReceiver PRIVATE src)
+    target_compile_definitions(ExampleReceiver PRIVATE DIS_VERSION=6)
+endif()
 
 # Configuring SDL2
 #--------------------------------------------------------------------------------------
@@ -119,8 +132,10 @@ else(SDL_INC_DIR)
     else(WIN32)
       separate_arguments(SDL_CFLAGS WINDOWS_COMMAND "${SDL_CFLAGS}")
     endif(WIN32)
-    target_compile_options(ExampleSender PRIVATE "${SDL_CFLAGS}")
-    target_compile_options(ExampleReceiver PRIVATE "${SDL_CFLAGS}")
+    if(BUILD_EXAMPLES AND DIS_PROTOCOL_VERSION STREQUAL "6" OR DIS_PROTOCOL_VERSION STREQUAL "BOTH")
+        target_compile_options(ExampleSender PRIVATE "${SDL_CFLAGS}")
+        target_compile_options(ExampleReceiver PRIVATE "${SDL_CFLAGS}")
+    endif()
   endif(SDL_CERR)
 endif(SDL_INC_DIR)
 
@@ -153,8 +168,10 @@ else(SDL_LIB_DIR)
     else(WIN32)
       separate_arguments(SDL_LFLAGS WINDOWS_COMMAND "${SDL_LFLAGS}")
     endif(WIN32)
-    target_link_libraries(ExampleSender PRIVATE "${SDL_LFLAGS}")
-    target_link_libraries(ExampleReceiver PRIVATE "${SDL_LFLAGS}")
+    if(BUILD_EXAMPLES AND DIS_PROTOCOL_VERSION STREQUAL "6" OR DIS_PROTOCOL_VERSION STREQUAL "BOTH")
+        target_link_libraries(ExampleSender PRIVATE "${SDL_LFLAGS}")
+        target_link_libraries(ExampleReceiver PRIVATE "${SDL_LFLAGS}")
+    endif()
   endif(SDL_LERR)
 endif(SDL_LIB_DIR)
 
@@ -166,11 +183,17 @@ IF(NOT DEFINED LIBDIR)
   set(LIBDIR "lib")   # Was not defined on Travis CI
 ENDIF(NOT DEFINED LIBDIR)
 # Configure install target (i.e. what files to install)
-install(TARGETS OpenDIS6 EXPORT OpenDIS6Config DESTINATION "${LIBDIR}")
-install(EXPORT OpenDIS6Config DESTINATION "lib/cmake/OpenDIS6")
-install(TARGETS OpenDIS7 EXPORT OpenDIS7Config DESTINATION "${LIBDIR}")
-install(EXPORT OpenDIS7Config DESTINATION "lib/cmake/OpenDIS7")
-install(TARGETS ExampleReceiver ExampleSender DESTINATION "bin")
+if(DIS_PROTOCOL_VERSION STREQUAL "6" OR DIS_PROTOCOL_VERSION STREQUAL "BOTH")
+    install(TARGETS OpenDIS6 EXPORT OpenDIS6Config DESTINATION "${LIBDIR}")
+    install(EXPORT OpenDIS6Config DESTINATION "lib/cmake/OpenDIS6")
+endif()
+if(DIS_PROTOCOL_VERSION STREQUAL "7" OR DIS_PROTOCOL_VERSION STREQUAL "BOTH")
+    install(TARGETS OpenDIS7 EXPORT OpenDIS7Config DESTINATION "${LIBDIR}")
+    install(EXPORT OpenDIS7Config DESTINATION "lib/cmake/OpenDIS7")
+endif()
+if(BUILD_EXAMPLES AND DIS_PROTOCOL_VERSION STREQUAL "6" OR DIS_PROTOCOL_VERSION STREQUAL "BOTH")
+    install(TARGETS ExampleReceiver ExampleSender DESTINATION "bin")
+endif()
 install(DIRECTORY src/ DESTINATION "include"
         FILES_MATCHING PATTERN "*.h"
 )
